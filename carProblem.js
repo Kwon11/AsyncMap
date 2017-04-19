@@ -1,38 +1,64 @@
-/*
-Inserting tasks to minimize total route length increase:
 
-Problem statement: Given a set of drivers D, each d in D with an ordered list of assigned tasks T(d), each t in T(d) with a location. The goal is to insert a new task into one of the assigned task lists (at the start, between any pair of tasks or at the end) so as to minimize the total increase in route length (where the distance for a route is the sum of distances between adjacent tasks). Distance here may be Euclidean.
-
-Part 1 - Build a naive solution that produces the optimal solution and benchmark the performance for a known set of random data. You may generate semi-realistic data any way you like. It doesn't need to be distributed like actual deliveries but should at least have all unique points. Benchmark the runtime for 1k, 10k, and 100k drivers each with 25 tasks.
-
-Part 2 - Improve the approach to scale sub-linearly with the number of total possible assignments, (25 + 1) * driversCount here. Since it may be hard to produce the exact solution, you may use any reasonable heuristics etc to achieve this goal. You should briefly justify your solution and provide benchmark results with the same dataset from the previous part.
-
-*/
-
-/*
-//1. Set up the problem
-40 minutes
-  //figure out max latitude and longitude for san francisco DONE
-  //learn and apply the distance formula to the compareDistance function DONE
-  //generate linked lists of random points
-*/
-
-//figure out how to generate linked lists with random coordinates
-
+//set up the parameters of the function
 var latitudeLimits = [37.714038, 37.808612];
 var longitudeLimits = [-122.502870, -122.407478];
 var tasksPerDriver = 25;
-/*
+var numberOfDrivers = 5;
+var drivers = [];
+
+//will turn "drivers" into a class
+for (var i = 0; i < numberOfDrivers; i++) {
+  drivers.push(new Driver);
+}
+
+var testTask = new Task();
+AddTaskSomewhere(drivers, testTask);
 
 
-49 minutes
-    //b core logic.
-        function calculateDfference (A, B, Q)
-        -- calls calculateDistance on  A,B, and A,Q + Q,B; pythagorian
-    //
-*/
-function Driver () {
-  this.T = new TaskList(); //length and head property
+function AddTaskSomewhere (drivers, task) {
+  var smallestSoFar = null;
+  var nodeToAddAfter = null; //if its a number, add as the first task for that driver. Else insert into this node at the end
+  var driverID = null;
+
+  for (var i = 0; i < drivers.length; i++) {
+    console.log('checking driver', i);
+    if (smallestSoFar === null) {
+      smallestSoFar = distanceCalculator(task, drivers[i].T.head);
+      nodeToAddAfter = i;
+      driverID = i;
+    } else if (smallestSoFar > distanceCalculator(task, drivers[i].T.head)) {
+      nodeToAddAfter = i;
+      smallestSoFar = distanceCalculator(task, drivers[i].T.head);
+      driverID = i;
+    }
+
+    var pointer = drivers[i].T.head;
+    while (pointer !== null) {
+        if (compareDistance(pointer, task, smallestSoFar)) { //if it returns a number that means it was smaller
+          smallestSoFar = compareDistance(pointer, task, smallestSoFar);
+          nodeToAddAfter = pointer;
+          driverID = i;
+          console.log('given to driver', driverID, 'additional distance now', smallestSoFar);
+        }
+        pointer = pointer.next; //either way go to the next one
+      }
+    }
+
+
+  if (typeof(nodeToAddAfter) === 'number') {
+    task.next = drivers[nodeToAddAfter].head;
+    drivers[nodeToAddAfter].head = task;
+  } else {
+    task.next = nodeToAddAfter.next;
+    nodeToAddAfter.next = task;
+  }
+  console.log('The additional distance for new task is', smallestSoFar, ', it will be given to driver', driverID);
+  return smallestSoFar;
+}
+
+function Driver () { //drivers come with tasks populated
+  this.T = new TaskList();
+  this.T.populateTasks();
 }
 
 function Task() {
@@ -47,21 +73,17 @@ function TaskList() {
   this.tail = null;
 
   this.addToTail = function (task) {
-    if (this.head === null) { //if head is nothing,
-      this.head = task; //make the head a new node, which has its own .next
-      this.head.next = null; //point that .next to null
-      this.tail = this.head; //keep the tail on the last link
+    if (this.head === null) {
+      this.head = task;
+      this.head.next = null;
+      this.tail = this.head;
       this.length++;
-    } else { //if the head exists
-      this.tail.next = task; //turn the pointer of the last object into the new object
-      this.tail = this.tail.next; //then turn the pointer into the next of this new object (this new tail)
+    } else {
+      this.tail.next = task;
+      this.tail = this.tail.next;
       this.length++;
     }
   }
-
-  this.addAfterNode = function (node) {
-
-  };
 
   this.populateTasks = function () {
     for (var i = 0; i < tasksPerDriver; i++) {
@@ -71,16 +93,25 @@ function TaskList() {
   }
 };
 
-function compareDistance(a, b, q) {
-  var original = distanceCalculator(a, b);
-  var newDistance = distanceCalculator(a, q) + distanceCalculator(q, b);
-  var additionalDistance = newDistance - original;
-  if (additionalDistance < 0) {
-    console.log('something is fucked your distance got a negative');
-  }
-  if (currentSmallest > additionalDistance) {
-    currentSmallest = additionalDistance;
-    locationToInsertAfter = a;
+function compareDistance(a, q, currentSmallest) {
+  if (a.next === null) {
+    console.log('finished checking this driver');
+    if (currentSmallest > distanceCalculator(a, q)) {
+      return distanceCalculator(a, q);
+    } else {
+      return false;
+    }
+  } else {
+    console.log('checking another 2 points');
+    var original = distanceCalculator(a, a.next);
+    var newDistance = distanceCalculator(a, q) + distanceCalculator(q, a.next);
+    var additionalDistance = newDistance - original;
+
+    if (currentSmallest > additionalDistance) {
+      console.log('replaced', currentSmallest, 'with', additionalDistance);
+      return additionalDistance;
+    }
+    return false;
   }
 }
 
@@ -113,18 +144,3 @@ function randomCoordinates (limits) {
 
 //console.log(distanceCalculator({longitude: -122.407478, latitude: 37.714038}, {longitude: -122.502870, latitude: 37.808612}));
 //google maps says the walking route ^ is about 9.1 miles. As the crow flys eyeball-estimate 8.5, which is pretty close to the answer in kilometers.
-
-// var testList = new TaskList ();
-// testList.populateTasks();
-// var pointer = testList.head;
-// while (pointer !== null) {
-//   console.log('latitude:', pointer.latitude);
-//   console.log('longitude:', pointer.longitude);
-//   pointer = pointer.next;
-// }
-
-
-/*
-20 minutes
-    //d. benchmark the runtime -- mocha had stuff for this, but just learn that all over kuz you don't remember shit
-*/
