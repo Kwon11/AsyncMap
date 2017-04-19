@@ -38,7 +38,7 @@ function AddTaskSomewhere (drivers, task) {
           smallestSoFar = compareDistance(pointer, task, smallestSoFar);
           nodeToAddAfter = pointer;
           driverID = i;
-          console.log('given to driver', driverID, 'additional distance now', smallestSoFar);
+          console.log('considering driver', driverID, ', additional distance would be', smallestSoFar);
         }
         pointer = pointer.next; //either way go to the next one
       }
@@ -52,7 +52,6 @@ function AddTaskSomewhere (drivers, task) {
     task.next = nodeToAddAfter.next;
     nodeToAddAfter.next = task;
   }
-  console.log('The additional distance for new task is', smallestSoFar, ', it will be given to driver', driverID);
   return smallestSoFar;
 }
 
@@ -102,13 +101,11 @@ function compareDistance(a, q, currentSmallest) {
       return false;
     }
   } else {
-    console.log('checking another 2 points');
     var original = distanceCalculator(a, a.next);
     var newDistance = distanceCalculator(a, q) + distanceCalculator(q, a.next);
     var additionalDistance = newDistance - original;
 
     if (currentSmallest > additionalDistance) {
-      console.log('replaced', currentSmallest, 'with', additionalDistance);
       return additionalDistance;
     }
     return false;
