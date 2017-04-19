@@ -12,7 +12,7 @@ Part 1 - Build a naive solution that produces the optimal solution and benchmark
 */
 
 
-solution:
+/*solution:
 T[d] = [A, B, C, D, E], all objects with X and Y
 
 var smallestDistance = {distance: 2, someWayToRememberWhere}
@@ -24,10 +24,10 @@ if (added distance < smallestDistance.distance) {
 }
 
 do that for all d in D.
+*/
 
 
-
-
+/*
 //1. Set up the problem
 40 minutes
     //a. ordered list of assigned tasks -- can i use a linked list? constant insertion, there is literally never a need to iterate back and forth or search a point for the naive solution. always scan the whole list
@@ -46,3 +46,27 @@ do that for all d in D.
 
 20 minutes
     //d. benchmark the runtime -- mocha had stuff for this, but just learn that all over kuz you don't remember shit
+*/
+
+function distanceCalculator(start, end) {
+  var x = start.x - end.x;
+  var y = start.y - end.y;
+  if (x < 0) {
+    x = -x;
+  }
+  if (y < 0) {
+    y = -y;
+  }
+  return Math.sqrt(x*x + y*y);
+};
+
+var a = {
+  x: 10,
+  y: 15
+}
+var b = {
+  x: 4,
+  y: 7
+}
+
+console.log(distanceCalculator(a, b));
