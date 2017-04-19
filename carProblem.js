@@ -20,7 +20,8 @@ Part 2 - Improve the approach to scale sub-linearly with the number of total pos
 //figure out how to generate linked lists with random coordinates
 
 var latitudeLimits = [37.714038, 37.808612];
-var longitudeLimits = [-122.407478, -122.502870];
+var longitudeLimits = [-122.502870, -122.407478];
+var tasksPerDriver = 25;
 /*
 
 
@@ -30,19 +31,52 @@ var longitudeLimits = [-122.407478, -122.502870];
         -- calls calculateDistance on  A,B, and A,Q + Q,B; pythagorian
     //
 */
-
-function insertTask (task) {
-  for (var i = 0; i < drivers.length; i++) {
-    //figure out how to start the process
-  }
+function Driver () {
+  this.T = new TaskList(); //length and head property
 }
+
+function Task() {
+  this.latitude = randomCoordinates(latitudeLimits);
+  this.longitude = randomCoordinates(longitudeLimits);
+  this.next = null;
+}
+
+function TaskList() {
+  this.length = 0;
+  this.head = null;
+  this.tail = null;
+
+  this.addToTail = function (task) {
+    if (this.head === null) { //if head is nothing,
+      this.head = task; //make the head a new node, which has its own .next
+      this.head.next = null; //point that .next to null
+      this.tail = this.head; //keep the tail on the last link
+      this.length++;
+    } else { //if the head exists
+      this.tail.next = task; //turn the pointer of the last object into the new object
+      this.tail = this.tail.next; //then turn the pointer into the next of this new object (this new tail)
+      this.length++;
+    }
+  }
+
+  this.addAfterNode = function (node) {
+
+  };
+
+  this.populateTasks = function () {
+    for (var i = 0; i < tasksPerDriver; i++) {
+      var newTask = new Task();
+      this.addToTail(newTask);
+    }
+  }
+};
 
 function compareDistance(a, b, q) {
   var original = distanceCalculator(a, b);
   var newDistance = distanceCalculator(a, q) + distanceCalculator(q, b);
   var additionalDistance = newDistance - original;
   if (additionalDistance < 0) {
-    console.log('something is fucked');
+    console.log('something is fucked your distance got a negative');
   }
   if (currentSmallest > additionalDistance) {
     currentSmallest = additionalDistance;
@@ -63,30 +97,34 @@ function distanceCalculator(start, end) {
 
   var a = Math.sin(latDifference/2) * Math.sin(latDifference/2) + Math.sin(lonDifference/2) * Math.sin(lonDifference/2) * Math.cos(makeRadians(start.latitude)) * Math.cos(makeRadians(end.latitude));
   var c = 2 * Math.asin(Math.sqrt(a));
-  return radiusOfEarth * c;
+  return radiusOfEarth * c;//haversine formula applied to start and end, returns km;
 };
 
 function makeRadians(degree) {
   return degree * Math.PI / 180;
 };
 
+function randomCoordinates (limits) {
+  //take random number, multiply by difference, add to minimum
+  var range = limits[1] - limits[0];
+  var coordinate = Math.random() * range + limits[0];
+  return coordinate;
+}
+
 //console.log(distanceCalculator({longitude: -122.407478, latitude: 37.714038}, {longitude: -122.502870, latitude: 37.808612}));
 //google maps says the walking route ^ is about 9.1 miles. As the crow flys eyeball-estimate 8.5, which is pretty close to the answer in kilometers.
 
-/*
+// var testList = new TaskList ();
+// testList.populateTasks();
+// var pointer = testList.head;
+// while (pointer !== null) {
+//   console.log('latitude:', pointer.latitude);
+//   console.log('longitude:', pointer.longitude);
+//   pointer = pointer.next;
+// }
 
-40 minutes
-    //c.
+
+/*
 20 minutes
     //d. benchmark the runtime -- mocha had stuff for this, but just learn that all over kuz you don't remember shit
 */
-
-
-var a = {
-  x: 10,
-  y: 15
-}
-var b = {
-  x: 4,
-  y: 7
-}
